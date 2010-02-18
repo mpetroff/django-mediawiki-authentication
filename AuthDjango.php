@@ -14,9 +14,9 @@ $wgAuthDjangoConfig['SessionTable']         = 'django_session';
 $wgAuthDjangoConfig['SessionprofileTable']  = 'sessionprofile_sessionprofile';
 
 $wgAuthDjangoConfig['LinkToSite']            = 'http://localhost/';
-$wgAuthDjangoConfig['LinkToSiteLogin']       = $wgAuthDjangoConfig['LinkToSite'] . 'accounts/login/';
-$wgAuthDjangoConfig['LinkToSiteLogout']      = $wgAuthDjangoConfig['LinkToSite'] . 'accounts/logout/';
-$wgAuthDjangoConfig['LinkToSiteRegister']    = $wgAuthDjangoConfig['LinkToSite'] . 'accounts/register/';
-$wgAuthDjangoConfig['LinkToWiki']            = $wgAuthDjangoConfig['LinkToSite'] . '/wiki/index.php/';
+$wgAuthDjangoConfig['LinkToSiteLogin']       = '/accounts/login/';
+$wgAuthDjangoConfig['LinkToSiteLogout']      = '/accounts/logout/';
+$wgAuthDjangoConfig['LinkToSiteRegister']    = '/accounts/register/';
+$wgAuthDjangoConfig['LinkToWiki']            = '/wiki/';
  
 $wgAuth = new AuthDjango();     // Auth_django Plugin.
