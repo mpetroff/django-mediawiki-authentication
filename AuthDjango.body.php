@@ -1,6 +1,6 @@
 <?php
     /* AuthDjango.php */
-    error_reporting(E_ALL);
+    
     /**
      * This plugin allows you to use the django auth system with mediawiki.
      *
@@ -273,4 +273,4 @@
             return true;
         }
     }
-    
+?>

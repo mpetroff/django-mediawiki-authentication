@@ -1,0 +1,9 @@
+A simple authentication plugin for mediawiki that uses the django
+authentication app as a backend.
+
+Requires sessionprofile from http://code.google.com/p/django-login-for-phpbb/
+
+To install copy django-media-authentication/ to extensions/. You
+must also modify the login form in includes/templates/UserLogin.php
+change name="wpName" to name="username" and name="wpPassword"
+to name="password".

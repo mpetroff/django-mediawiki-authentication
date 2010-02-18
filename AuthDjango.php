@@ -1,6 +1,6 @@
 <?php
 // Django authentication plugin.
-require_once './extensions/ad.php';
+require_once 'AuthDjango.body.php';
  
 $wgAuthDjangoConfig = array();
  
@@ -19,4 +19,5 @@ $wgAuthDjangoConfig['LinkToSiteLogout']      = '/accounts/logout/';
 $wgAuthDjangoConfig['LinkToSiteRegister']    = '/accounts/register/';
 $wgAuthDjangoConfig['LinkToWiki']            = '/wiki/';
  
-$wgAuth = new AuthDjango();     // Auth_django Plugin.
+$wgAuth = new AuthDjango();     // Initiate Auth Plugin
+?>
