@@ -1,9 +1,9 @@
 <?php
 // Django authentication plugin.
-require_once 'AuthDjango.body.php';
- 
+$wgAutoloadClasses['AuthDjango'] = dirname(__FILE__) . '/AuthDjango.body.php';
+
 $wgAuthDjangoConfig = array();
- 
+
 $wgAuthDjangoConfig['DjangoHost']   = 'localhost';  // Django MySQL Host Name.
 $wgAuthDjangoConfig['DjangoUser']   = 'root';       // Django MySQL Username.
 $wgAuthDjangoConfig['DjangoPass']   = '';           // Django MySQL Password.
@@ -18,6 +18,6 @@ $wgAuthDjangoConfig['LinkToSiteLogin']       = '/accounts/login/';
 $wgAuthDjangoConfig['LinkToSiteLogout']      = '/accounts/logout/';
 $wgAuthDjangoConfig['LinkToSiteRegister']    = '/accounts/register/';
 $wgAuthDjangoConfig['LinkToWiki']            = '/wiki/';
- 
+
 $wgAuth = new AuthDjango();     // Initiate Auth Plugin
 ?>
