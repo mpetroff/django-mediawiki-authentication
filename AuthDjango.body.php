@@ -5,6 +5,7 @@
      * This plugin allows you to use the django auth system with mediawiki.
      *
      * Copyright 2009-2010 Thomas Lilley <mail@tomlilley.co.uk> (tomlilley.co.uk)
+     * Copyright 2011 Jack Grigg <me@jackgrigg.com> (jackgrigg.com)
      *
      * This program is free software; you can redistribute it and/or modify
      * it under the terms of the GNU General Public License as published by
@@ -63,6 +64,7 @@
             $GLOBALS['wgGroupPermissions']['*']['createaccount'] = false;
             
             // Set table names
+            $this->authdjango_table         = $GLOBALS['wgAuthDjangoConfig']['AuthDjangoTable'];
             $this->user_table               = $GLOBALS['wgAuthDjangoConfig']['UserTable'];
             $this->session_table            = $GLOBALS['wgAuthDjangoConfig']['SessionTable'];
             $this->session_profile_table    = $GLOBALS['wgAuthDjangoConfig']['SessionprofileTable'];
@@ -77,7 +79,8 @@
             // Set hooks functions
             $GLOBALS['wgHooks']['UserLogout'][]            = $this;
             $GLOBALS['wgHooks']['UserLoadFromSession'][]   = $this;
-            $GLOBALS['wgHooks']['UserLoginForm'][]         = $this;
+            $GLOBALS['wgHooks']['PersonalUrls'][]          = $this;
+            $GLOBALS['wgHooks']['SpecialPage_initList'][]  = $this;
         }
         
         /**
@@ -90,37 +93,11 @@
          * @return bool
          */
         public function userExists($username) {
-            // replace space with underscore (site login doesn't allow spaces in usernames)
-            $username = str_replace(' ', '_', $username);
-            
-            $query = sprintf('SELECT username FROM %s WHERE username = "%s" LIMIT 0,1', $this->user_table, $this->db->real_escape_string($username));
-
-            if ($result = $this->db->query($query)) {
-                // single row so no looping
-                $row = $result->fetch_assoc();
-                $result->close();
-                
-                // make both usernames lowercase, then compare
-                if (strtolower($row['username']) == strtolower($username)) {
-                    return true;
-                }
-            }
-            
-            return false;
+            // Since if a user does not exist they will be created,
+            // always return true.
+            return true;
         }
         
-        /**
-         * Modify options in the login template.
-         *
-         * @param $template UserLoginTemplate object.
-         */
-        public function modifyUITemplate( &$template ) {
-            # Override this!
-            $template->set('usedomain', false);
-            $template->set('create', false);
-            $template->set('useemail', false);
-        }
-
         /**
          * Return true if the wiki should create a new local account automatically
          * when asked to login a user who doesn't exist locally but does in the
@@ -199,27 +176,53 @@
                 $django_session = $_COOKIE['sessionid'];
                 
                 // find if there is a user connected to this session
-                $query = sprintf("SELECT auth_user.username as username, auth_user.email as email FROM %s, %s sp" .
+                $q1 = sprintf("SELECT auth_user.id as user_id, auth_user.username as username, auth_user.email as email FROM %s, %s sp" .
                     " WHERE sp.session_id = '%s' AND auth_user.id = sp.user_id", $this->user_table, $this->session_profile_table, $this->db->real_escape_string($django_session));
-                $qresult = $this->db->query($query);
-                $row = $qresult->fetch_array(MYSQLI_BOTH);
+                $q1result = $this->db->query($q1);
+                $r1 = $q1result->fetch_array(MYSQLI_BOTH);
                 
-                // replace space with underscore (site login doesn't allow spaces in usernames)
-                $username = str_replace(' ', '_', $row['username']);
-                if ($row) {
-                    $u = User::newFromName($username);
-                    // create a new user if one does not exist
-                    if ($u->getID() == 0) {
-                        if (Auth_django::autoCreate() && Auth_django::userExists($username)) {
-                            $u->addToDatabase();
-                            $u->setToken();
+                if ($r1) {
+                    // there is a Django session present
+                    $dbr = wfGetDB(DB_SLAVE);
+                    $q2result = $dbr->select(
+                        $this->authdjango_table,
+                        'mw_user_id',
+                        'd_user_id == ' . $r1['user_id']
+                    );
+                    $r2 = $q2result->fetchObject();
+
+                    $local_id = ($r2) ? $r2->mw_user_id : 0;
+
+                    if (!$r2) {
+                        // Django user does not exist in MW djangouser table
+                        // create a new user if one does not exist, and update
+                        // djangouser table if one does
+
+                        // replace space with underscore
+                        // (site login doesn't allow spaces in usernames)
+                        $username = str_replace(' ', '_', $r1['username']);
+                        $u = User::newFromName($username);
+                        if ($u->getID() == 0) {
+                            // FIXME: Is the AuthDjango::userExists call necessary here?
+                            if (AuthDjango::autoCreate() && AuthDjango::userExists($username)) {
+                                $u->setEmail($r1['email']);
+                                $u->confirmEmail();
+                                $u->addToDatabase();
+                                $u->setToken();
+                            }
                         }
-                    }
-                    
-                    $local_id = User::idFromName($username);
-                    
-                    if (!$local_id) {
-                        return true;
+                        // Either a new MW user hs been created or there was an existing
+                        // user with the same (ignoring spaces) username.
+                        // In any case, update authdjango table.
+                        $local_id = $u->getID();
+                        $dbw = wfGetDB(DB_MASTER);
+                        $dbw->insert(
+                            $this->authdjango_table,
+                            array(
+                                'd_user_id' => $r1['user_id'],
+                                'mw_user_id' => $local_id
+                            )
+                        );
                     }
                     
                     $user->setID($local_id);
@@ -261,15 +264,29 @@
         }
         
         /**
-         * Changes the form action to login to django and sets username to blank
-         * so mediawiki doesn't try to format it wrong (spaces/undescore issue)
+         * Changes the login and logout urls to the defined ones.
          *
-         * @param object $template
+         * @param object $personal_urls
+         * @param object $wgTitle
          * @return bool
          */
-        public function onUserLoginForm($template) {
-            $template->data['name'] = '';
-            $template->data['action'] = $GLOBALS['wgAuthDjangoConfig']['LinkToSiteLogin'] . '?next=' . $GLOBALS['wgAuthDjangoConfig']['LinkToWiki'] . $_GET['returnto'];
+        public function onPersonalUrls($personal_urls, $wgTitle) {
+            if( isset( $personal_urls['login'] ) ) {
+                $personal_urls['login']['text'] = 'Log in / create account';
+                $personal_urls['login']['href'] = $GLOBALS['wgAuthDjangoConfig']['LinkToSiteLogin'] . '?next=' . $GLOBALS['wgAuthDjangoConfig']['LinkToWiki'];
+            }
+            unset( $personal_urls['anonlogin'] );
+            return true;
+        }
+
+        /**
+         * Remove login and logout special pages.
+         *
+         * @param object $list
+         * @return bool
+         */
+        public function onSpecialPage_initList($list) {
+            unset( $list['Userlogin'] );
             return true;
         }
     }
