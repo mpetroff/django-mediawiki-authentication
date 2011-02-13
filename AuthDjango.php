@@ -1,18 +1,7 @@
 <?php
 // Django authentication plugin.
-$wgAutoloadClasses['AuthDjango'] = dirname(__FILE__) . '/AuthDjango.body.php';
 
-# Schema updates for update.php
-$wgHooks['LoadExtensionSchemaUpdates'][] = 'addAuthDjangoTables';
-function addAuthDjangoTables() {
-    global $wgExtNewTables;
-    $wgExtNewTables[] = array(
-        'djangouser',
-        dirname( __FILE__ ) . '/tables-authdjango.sql' );
-    return true;
-}
-
-
+// Configuration variables
 $wgAuthDjangoConfig = array();
 
 $wgAuthDjangoConfig['DjangoHost']   = 'localhost';  // Django MySQL Host Name.
@@ -31,5 +20,18 @@ $wgAuthDjangoConfig['LinkToSiteLogout']      = '/accounts/logout/';
 $wgAuthDjangoConfig['LinkToSiteRegister']    = '/accounts/register/';
 $wgAuthDjangoConfig['LinkToWiki']            = '/wiki/';
 
+// Load classes
+$wgAutoloadClasses['AuthPlugin'] = dirname('./include') . '/AuthPlugin.php';
+$wgAutoloadClasses['AuthDjango'] = dirname(__FILE__) . '/AuthDjango.body.php';
+
+// Schema updates for update.php
+$wgHooks['LoadExtensionSchemaUpdates'][] = 'addAuthDjangoTables';
+function addAuthDjangoTables() {
+    global $wgExtNewTables;
+    $wgExtNewTables[] = array(
+        'djangouser',
+        dirname( __FILE__ ) . '/tables-authdjango.sql' );
+    return true;
+}
+
 $wgAuth = new AuthDjango();     // Initiate Auth Plugin
-?>

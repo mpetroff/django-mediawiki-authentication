@@ -20,19 +20,17 @@
      * http://www.gnu.org/copyleft/gpl.html
      */
 
-    require_once './includes/AuthPlugin.php';
-    
     /**
      * Not actually used for authentication, UserLoadFromSession does that.
      *
      */
     class AuthDjango extends AuthPlugin {
         /**
-         * Mysqli database object
+         * DatabaseMysql database object for Django
          *
          * @var object
          */
-        private $db;
+        private $dbd;
         
         /**
          * Users table name
@@ -70,11 +68,12 @@
             $this->session_profile_table    = $GLOBALS['wgAuthDjangoConfig']['SessionprofileTable'];
             
             // start database connection
-            $this->db = new mysqli($GLOBALS['wgAuthDjangoConfig']['DjangoHost'], $GLOBALS['wgAuthDjangoConfig']['DjangoUser'], $GLOBALS['wgAuthDjangoConfig']['DjangoPass'], $GLOBALS['wgAuthDjangoConfig']['DjangoDBName']);
-            
-            if ($this->db->connect_error) {
-                die('Connect Error (' . mysqli_connect_errno() . ') ' . $this->db->connect_error);
-            }
+            $this->dbd = new DatabaseMysql(
+                $GLOBALS['wgAuthDjangoConfig']['DjangoHost'],
+                $GLOBALS['wgAuthDjangoConfig']['DjangoUser'],
+                $GLOBALS['wgAuthDjangoConfig']['DjangoPass'],
+                $GLOBALS['wgAuthDjangoConfig']['DjangoDBName']
+            );
             
             // Set hooks functions
             $GLOBALS['wgHooks']['UserLogout'][]            = $this;
@@ -174,38 +173,53 @@
         public function onUserLoadFromSession($user, &$result) {
             if (array_key_exists('sessionid', $_COOKIE)) {
                 $django_session = $_COOKIE['sessionid'];
-                
+
                 // find if there is a user connected to this session
-                $q1 = sprintf("SELECT auth_user.id as user_id, auth_user.username as username, auth_user.email as email FROM %s, %s sp" .
-                    " WHERE sp.session_id = '%s' AND auth_user.id = sp.user_id", $this->user_table, $this->session_profile_table, $this->db->real_escape_string($django_session));
-                $q1result = $this->db->query($q1);
-                $r1 = $q1result->fetch_array(MYSQLI_BOTH);
-                
+                $r1 = $this->dbd->selectRow(
+                    array(
+                        $this->user_table,
+                        $this->session_profile_table
+                    ),
+                    array(
+                        $this->user_table . '.id',
+                        $this->user_table . '.username',
+                        $this->user_table . '.email'
+                    ),
+                    array(
+                        $this->session_profile_table . '.session_id' => $this->db->escapeLike($django_session),
+                        $this->user_table . '.id' => $this->session_profile_table . '.session_id'
+                    )
+                );
+
                 if ($r1) {
                     // there is a Django session present
+                    $user_id = $r1[$this->user_table . '.id'];
                     $dbr = wfGetDB(DB_SLAVE);
-                    $q2result = $dbr->select(
+                    $mw_uid = $dbr->selectField(
                         $this->authdjango_table,
                         'mw_user_id',
-                        'd_user_id == ' . $r1['user_id']
+                        array(
+                            'd_user_id' => $user_id
+                        )
                     );
-                    $r2 = $q2result->fetchObject();
 
-                    $local_id = ($r2) ? $r2->mw_user_id : 0;
+                    $local_id = ($mw_uid) ? $mw_uid : 0;
 
-                    if (!$r2) {
+                    if (!$mw_uid) {
                         // Django user does not exist in MW djangouser table
                         // create a new user if one does not exist, and update
                         // djangouser table if one does
+                        $username = $r1[$this->user_table . '.username'];
+                        $email = $r1[$this->user_table . '.email'];
 
                         // replace space with underscore
                         // (site login doesn't allow spaces in usernames)
-                        $username = str_replace(' ', '_', $r1['username']);
+                        $username = str_replace(' ', '_', $username);
                         $u = User::newFromName($username);
                         if ($u->getID() == 0) {
                             // FIXME: Is the AuthDjango::userExists call necessary here?
                             if (AuthDjango::autoCreate() && AuthDjango::userExists($username)) {
-                                $u->setEmail($r1['email']);
+                                $u->setEmail($email);
                                 $u->confirmEmail();
                                 $u->addToDatabase();
                                 $u->setToken();
@@ -219,7 +233,7 @@
                         $dbw->insert(
                             $this->authdjango_table,
                             array(
-                                'd_user_id' => $r1['user_id'],
+                                'd_user_id' => $user_id,
                                 'mw_user_id' => $local_id
                             )
                         );
@@ -250,10 +264,18 @@
         public function onUserLogout(&$user) {
             if (array_key_exists('sessionid', $_COOKIE)) {
                 // Delete session from session table and session profile table
-                $query = sprintf("DELETE FROM %s WHERE session_key = '%s' LIMIT 1", $this->session_table, $this->db->real_escape_string($_COOKIE['sessionid']));
-                $result = $this->db->query($query);
-                $query = sprintf("DELETE FROM %s WHERE session_id = '%s' LIMIT 1", $this->session_profile_table, $this->db->real_escape_string($_COOKIE['sessionid']));
-                $this->db->query($query);
+                $this->dbd->delete(
+                    $this->session_table,
+                    array(
+                        'session_key' => $this->db->escapeLike($_COOKIE['sessionid'])
+                    )
+                );
+                $this->dbd->delete(
+                    $this->session_profile_table,
+                    array(
+                        'session_id' => $this->db->escapeLike($_COOKIE['sessionid'])
+                    )
+                );
             }
             
             // Clear cookies and session data
@@ -272,7 +294,8 @@
          */
         public function onPersonalUrls($personal_urls, $wgTitle) {
             if( isset( $personal_urls['login'] ) ) {
-                $personal_urls['login']['text'] = 'Log in / create account';
+                // Comment out for now (if needed will need to add i18n support)
+                //$personal_urls['login']['text'] = 'Log in / create account';
                 $personal_urls['login']['href'] = $GLOBALS['wgAuthDjangoConfig']['LinkToSiteLogin'] . '?next=' . $GLOBALS['wgAuthDjangoConfig']['LinkToWiki'];
             }
             unset( $personal_urls['anonlogin'] );
@@ -290,4 +313,3 @@
             return true;
         }
     }
-?>
