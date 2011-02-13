@@ -181,12 +181,12 @@
                         $this->session_profile_table
                     ),
                     array(
-                        $this->user_table . '.id',
+                        $this->user_table . '.id AS d_user_id',
                         'username',
                         'email'
                     ),
                     array(
-                        'session_id' => $this->db->escapeLike($django_session)
+                        'session_id' => $django_session
                     ),
                     $join_conds=array (
                         'uid' => array(
@@ -198,7 +198,7 @@
 
                 if ($r1) {
                     // there is a Django session present
-                    $user_id = $r1[$this->user_table . '.id'];
+                    $user_id = $r1->d_user_id;
                     $dbr = wfGetDB(DB_SLAVE);
                     $mw_uid = $dbr->selectField(
                         $this->authdjango_table,
@@ -214,8 +214,8 @@
                         // Django user does not exist in MW djangouser table
                         // create a new user if one does not exist, and update
                         // djangouser table if one does
-                        $username = $r1[$this->user_table . '.username'];
-                        $email = $r1[$this->user_table . '.email'];
+                        $username = $r1->username;
+                        $email = $r1->email;
 
                         // replace space with underscore
                         // (site login doesn't allow spaces in usernames)
@@ -272,13 +272,13 @@
                 $this->dbd->delete(
                     $this->session_table,
                     array(
-                        'session_key' => $this->db->escapeLike($_COOKIE['sessionid'])
+                        'session_key' => $_COOKIE['sessionid']
                     )
                 );
                 $this->dbd->delete(
                     $this->session_profile_table,
                     array(
-                        'session_id' => $this->db->escapeLike($_COOKIE['sessionid'])
+                        'session_id' => $_COOKIE['sessionid']
                     )
                 );
             }
