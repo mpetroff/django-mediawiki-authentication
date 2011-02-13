@@ -34,4 +34,7 @@ function addAuthDjangoTables() {
     return true;
 }
 
-$wgAuth = new AuthDjango();     // Initiate Auth Plugin
+$wgExtensionFunctions[] = "initAuthDjango";
+function initAuthDjango() {
+    $wgAuth = new AuthDjango();     // Initiate Auth Plugin
+}
