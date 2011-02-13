@@ -182,13 +182,16 @@
                     ),
                     array(
                         $this->user_table . '.id',
-                        $this->user_table . '.username',
-                        $this->user_table . '.email'
+                        'username',
+                        'email'
                     ),
                     array(
-                        $this->session_profile_table . '.session_id' => $this->db->escapeLike($django_session),
-                        $this->user_table . '.id' => $this->session_profile_table . '.session_id'
-                    )
+                        'session_id' => $this->db->escapeLike($django_session)
+                    ),
+                    join_conds = array (
+                        'uid' => array(
+                            'INNER JOIN',
+                            $this->user_table . '.id=user_id'
                 );
 
                 if ($r1) {
