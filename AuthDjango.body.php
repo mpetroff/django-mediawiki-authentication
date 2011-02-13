@@ -192,6 +192,8 @@
                         'uid' => array(
                             'INNER JOIN',
                             $this->user_table . '.id=user_id'
+                        )
+                    )
                 );
 
                 if ($r1) {
