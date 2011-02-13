@@ -188,7 +188,7 @@
                     array(
                         'session_id' => $this->db->escapeLike($django_session)
                     ),
-                    join_conds = array (
+                    $join_conds=array (
                         'uid' => array(
                             'INNER JOIN',
                             $this->user_table . '.id=user_id'
