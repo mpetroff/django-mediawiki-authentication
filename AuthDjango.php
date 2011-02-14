@@ -14,10 +14,7 @@ $wgAuthDjangoConfig['UserTable']            = 'auth_user';
 $wgAuthDjangoConfig['SessionTable']         = 'django_session';
 $wgAuthDjangoConfig['SessionprofileTable']  = 'sessionprofile_sessionprofile';
 
-$wgAuthDjangoConfig['LinkToSite']            = 'http://localhost/';
 $wgAuthDjangoConfig['LinkToSiteLogin']       = '/accounts/login/';
-$wgAuthDjangoConfig['LinkToSiteLogout']      = '/accounts/logout/';
-$wgAuthDjangoConfig['LinkToSiteRegister']    = '/accounts/register/';
 $wgAuthDjangoConfig['LinkToWiki']            = '/wiki/';
 
 // Load classes
