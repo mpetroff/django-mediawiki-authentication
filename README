@@ -15,7 +15,7 @@ GRANT SELECT, DELETE ON `django_db_name`.`django_session` TO 'wikiuser'@'localho
 * Add the following line to your LocalSettings.php:
 require_once('extensions/AuthDjango/AuthDjango.php');
 * Run update.php to update the database schema:
-cd ./maintainence/ && php update.php
+cd ./maintenance/ && php update.php
 
 Note that while new accounts and previous logins are linked together using Django's
 user id, the first time a Django user goes to the wiki where they have an existing
