@@ -7,7 +7,7 @@ $wgAuthDjangoConfig = array();
 $wgAuthDjangoConfig['DjangoHost']   = 'localhost';  // Django MySQL Host Name.
 $wgAuthDjangoConfig['DjangoUser']   = 'root';       // Django MySQL Username.
 $wgAuthDjangoConfig['DjangoPass']   = '';           // Django MySQL Password.
-$wgAuthDjangoConfig['DjangoDBName'] = 'django';     // phpBB MySQL Database Name.
+$wgAuthDjangoConfig['DjangoDBName'] = 'django';     // Django MySQL Database Name.
 
 $wgAuthDjangoConfig['AuthDjangoTable']      = 'authdjango';
 $wgAuthDjangoConfig['UserTable']            = 'auth_user';
