@@ -175,7 +175,7 @@
             if (isset($_REQUEST['title']) && $_REQUEST['title'] == $lg->specialPage('Userlogin')) {
                 // Redirect to our login page
                 $returnto = $wgRequest->getVal('returnto');
-                $wgOut->redirect($GLOBALS['wgAuthDjangoConfig']['LinkToSiteLogin'] . '?next=' . $GLOBALS['wgAuthDjangoConfig']['LinkToSiteWiki'] . $returnto);
+                $wgOut->redirect($GLOBALS['wgAuthDjangoConfig']['LinkToSiteLogin'] . '?next=' . $GLOBALS['wgAuthDjangoConfig']['LinkToWiki'] . $returnto);
             } elseif (array_key_exists('sessionid', $_COOKIE)) {
                 $django_session = $_COOKIE['sessionid'];
 
