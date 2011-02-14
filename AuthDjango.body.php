@@ -79,7 +79,6 @@
             $GLOBALS['wgHooks']['UserLogout'][]            = $this;
             $GLOBALS['wgHooks']['UserLoadFromSession'][]   = $this;
             $GLOBALS['wgHooks']['PersonalUrls'][]          = $this;
-            $GLOBALS['wgHooks']['SpecialPage_initList'][]  = $this;
         }
         
         /**
@@ -171,7 +170,13 @@
          * @return bool
          */
         public function onUserLoadFromSession($user, &$result) {
-            if (array_key_exists('sessionid', $_COOKIE)) {
+            global $wgLanguageCode, $wgRequest, $wgOut;
+            $lg = Language::factory($wgLanguageCode);
+            if (isset($_REQUEST['title']) && $_REQUEST['title'] == $lg->specialPage('Userlogin')) {
+                // Redirect to our login page
+                $returnto = $wgRequest->getVal('returnto');
+                $wgOut->redirect($GLOBALS['wgAuthDjangoConfig']['LinkToSiteLogin'] . '?next=' . $GLOBALS['wgAuthDjangoConfig']['LinkToSiteWiki'] . $returnto);
+            } elseif (array_key_exists('sessionid', $_COOKIE)) {
                 $django_session = $_COOKIE['sessionid'];
 
                 // find if there is a user connected to this session
@@ -291,29 +296,14 @@
         }
         
         /**
-         * Changes the login url to the defined ones.
+         * Unset anonymous login.
          *
          * @param object $personal_urls
          * @param object $wgTitle
          * @return bool
          */
         public function onPersonalUrls($personal_urls, $wgTitle) {
-            if( !isset( $personal_urls['logout'] ) ) {
-                $personal_urls['login']['text'] = 'Log in / create account';
-                $personal_urls['login']['href'] = $GLOBALS['wgAuthDjangoConfig']['LinkToSiteLogin'] . '?next=' . $GLOBALS['wgAuthDjangoConfig']['LinkToWiki'];
-            }
             unset( $personal_urls['anonlogin'] );
-            return true;
-        }
-
-        /**
-         * Remove login special page.
-         *
-         * @param object $list
-         * @return bool
-         */
-        public function onSpecialPage_initList($list) {
-            unset( $list['Userlogin'] );
             return true;
         }
     }
