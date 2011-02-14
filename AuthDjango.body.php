@@ -186,13 +186,8 @@
                         'email'
                     ),
                     array(
+                        $this->user_table . '.id=user_id',
                         'session_id' => $django_session
-                    ),
-                    $join_conds=array (
-                        'uid' => array(
-                            'INNER JOIN',
-                            $this->user_table . '.id=user_id'
-                        )
                     )
                 );
 
@@ -255,6 +250,11 @@
                     unset($_COOKIE['wikidb_session']);
                     session_destroy();
                 }
+            } else {
+                // if we're not logged in on the site make sure we're logged out of the database.
+                setcookie('wikidb_session', '', time()-3600);
+                unset($_COOKIE['wikidb_session']);
+                session_destroy();
             }
             
             return true;
@@ -291,16 +291,15 @@
         }
         
         /**
-         * Changes the login and logout urls to the defined ones.
+         * Changes the login url to the defined ones.
          *
          * @param object $personal_urls
          * @param object $wgTitle
          * @return bool
          */
         public function onPersonalUrls($personal_urls, $wgTitle) {
-            if( isset( $personal_urls['login'] ) ) {
-                // Comment out for now (if needed will need to add i18n support)
-                //$personal_urls['login']['text'] = 'Log in / create account';
+            if( !isset( $personal_urls['logout'] ) ) {
+                $personal_urls['login']['text'] = 'Log in / create account';
                 $personal_urls['login']['href'] = $GLOBALS['wgAuthDjangoConfig']['LinkToSiteLogin'] . '?next=' . $GLOBALS['wgAuthDjangoConfig']['LinkToWiki'];
             }
             unset( $personal_urls['anonlogin'] );
@@ -308,7 +307,7 @@
         }
 
         /**
-         * Remove login and logout special pages.
+         * Remove login special page.
          *
          * @param object $list
          * @return bool
