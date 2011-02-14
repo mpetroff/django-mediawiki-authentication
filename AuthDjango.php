@@ -29,7 +29,7 @@ $wgHooks['LoadExtensionSchemaUpdates'][] = 'addAuthDjangoTables';
 function addAuthDjangoTables() {
     global $wgExtNewTables;
     $wgExtNewTables[] = array(
-        'djangouser',
+        'authdjango',
         dirname( __FILE__ ) . '/tables-authdjango.sql' );
     return true;
 }
