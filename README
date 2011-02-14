@@ -6,8 +6,6 @@ Requires sessionprofile from http://code.google.com/p/django-login-for-phpbb/
 To install:
 * Copy django-media-authentication/ to extensions/ and rename to AuthDjango/.
 * Change the configuration variables in AuthDjango.php to suit your needs.
-  * DjangoUser and DjangoPass should be the login details of your MediaWiki database
-    user, which will receive permissions in a moment.
   * LinkToSiteLogin should be Django's login page URL
   * LinkToWiki should be the subdirectory that the wiki is in, including the trailing /
 * Give the following permissions for your MediaWiki database user:

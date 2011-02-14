@@ -4,10 +4,10 @@
 // Configuration variables
 $wgAuthDjangoConfig = array();
 
-$wgAuthDjangoConfig['DjangoHost']   = 'localhost';  // Django MySQL Host Name.
-$wgAuthDjangoConfig['DjangoUser']   = 'root';       // Django MySQL Username.
-$wgAuthDjangoConfig['DjangoPass']   = '';           // Django MySQL Password.
-$wgAuthDjangoConfig['DjangoDBName'] = 'django';     // Django MySQL Database Name.
+$wgAuthDjangoConfig['DjangoHost']   = $wgDBserver;   // Django MySQL Host Name.
+$wgAuthDjangoConfig['DjangoUser']   = $wgDBuser;     // Django MySQL Username.
+$wgAuthDjangoConfig['DjangoPass']   = $wgDBpassword; // Django MySQL Password.
+$wgAuthDjangoConfig['DjangoDBName'] = 'django';      // Django MySQL Database Name.
 
 $wgAuthDjangoConfig['AuthDjangoTable']      = 'authdjango';
 $wgAuthDjangoConfig['UserTable']            = 'auth_user';
