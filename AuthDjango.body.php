@@ -172,11 +172,11 @@
         public function onUserLoadFromSession($user, &$result) {
             global $wgLanguageCode, $wgRequest, $wgOut;
             $lg = Language::factory($wgLanguageCode);
-            if (isset($_REQUEST['title']) && $_REQUEST['title'].find($lg->specialPage('Userlogin'))>=0) {
+            if (isset($_REQUEST['title']) && stripos($_REQUEST['title'], $lg->specialPage('Userlogin'))) {
                 // Redirect to our login page
                 $returnto = $wgRequest->getVal('returnto');
                 // Don't redirect straight back to the logout page
-                $returnto = ($returnto.find($lg->specialPage('Userlogout'))>=0) ? '' : $returnto;
+                $returnto = (stripos($returnto, $lg->specialPage('Userlogout'))) ? '' : $returnto;
                 $wgOut->redirect($GLOBALS['wgAuthDjangoConfig']['LinkToSiteLogin'] . '?next=' . $GLOBALS['wgAuthDjangoConfig']['LinkToWiki'] . $returnto);
             } elseif (array_key_exists('sessionid', $_COOKIE)) {
                 $django_session = $_COOKIE['sessionid'];
