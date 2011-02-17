@@ -261,7 +261,9 @@
                 // if we're not logged in on the site make sure we're logged out of the database.
                 setcookie('wikidb_session', '', time()-3600);
                 unset($_COOKIE['wikidb_session']);
-                session_destroy();
+                if (session_id() != "") {
+                    session_destroy();
+                }
             }
             
             return true;
