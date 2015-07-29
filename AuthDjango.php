@@ -12,7 +12,6 @@ $wgAuthDjangoConfig['DjangoDBName'] = 'django';      // Django MySQL Database Na
 $wgAuthDjangoConfig['AuthDjangoTable']      = 'authdjango';
 $wgAuthDjangoConfig['UserTable']            = 'auth_user';
 $wgAuthDjangoConfig['SessionTable']         = 'django_session';
-$wgAuthDjangoConfig['SessionprofileTable']  = 'sessionprofile_sessionprofile';
 
 $wgAuthDjangoConfig['LinkToSiteLogin']       = '/accounts/login/';
 $wgAuthDjangoConfig['LinkToWiki']            = '/wiki/';

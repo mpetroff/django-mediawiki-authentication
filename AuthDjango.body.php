@@ -6,6 +6,7 @@
      *
      * Copyright 2009-2010 Thomas Lilley <mail@tomlilley.co.uk> (tomlilley.co.uk)
      * Copyright 2011 Jack Grigg <me@jackgrigg.com> (jackgrigg.com)
+     * Copyright 2015 Matthew Petroff (https://mpetroff.net/)
      *
      * This program is free software; you can redistribute it and/or modify
      * it under the terms of the GNU General Public License as published by
@@ -47,13 +48,6 @@
         private $session_table;
         
         /**
-         * Session profile table name
-         *
-         * @var string
-         */
-        private $session_profile_table;
-        
-        /**
          * Connects to the database and inititaes some variables.
          *
          */
@@ -65,7 +59,6 @@
             $this->authdjango_table         = $GLOBALS['wgAuthDjangoConfig']['AuthDjangoTable'];
             $this->user_table               = $GLOBALS['wgAuthDjangoConfig']['UserTable'];
             $this->session_table            = $GLOBALS['wgAuthDjangoConfig']['SessionTable'];
-            $this->session_profile_table    = $GLOBALS['wgAuthDjangoConfig']['SessionprofileTable'];
             
             // start database connection
             $this->dbd = new DatabaseMysql(
@@ -183,24 +176,29 @@
 
                 // find if there is a user connected to this session
                 $r1 = $this->dbd->selectRow(
-                    array(
-                        $this->user_table,
-                        $this->session_profile_table
-                    ),
-                    array(
-                        $this->user_table . '.id AS d_user_id',
-                        'username',
-                        'email'
-                    ),
-                    array(
-                        $this->user_table . '.id=user_id',
-                        'session_id' => $django_session
-                    )
+                    $this->session_table,
+                    'session_data',
+                    'session_key = \'' . $django_session . '\''
                 );
+                if ($r1) {
+                    $decoded = json_decode(explode(':', base64_decode($r1->session_data), 2)[1]);
+                    if (property_exists($decoded, '_auth_user_id')) {
+                        $user_id = $decoded->_auth_user_id;
+                        $r1 = $this->dbd->selectRow(
+                            $this->user_table,
+                            array(
+                                'username',
+                                'email'
+                            ),
+                            'id=' . $user_id
+                        );
+                    } else {
+                        $r1 = false;
+                    }
+                }
 
                 if ($r1) {
                     // there is a Django session present
-                    $user_id = $r1->d_user_id;
                     $dbr = wfGetDB(DB_SLAVE);
                     $mw_uid = $dbr->selectField(
                         $this->authdjango_table,
@@ -284,12 +282,6 @@
                     $this->session_table,
                     array(
                         'session_key' => $_COOKIE['sessionid']
-                    )
-                );
-                $this->dbd->delete(
-                    $this->session_profile_table,
-                    array(
-                        'session_id' => $_COOKIE['sessionid']
                     )
                 );
             }
