@@ -32,5 +32,6 @@ function addAuthDjangoTables() {
 
 $wgExtensionFunctions[] = "initAuthDjango";
 function initAuthDjango() {
+    global $wgAuth;
     $wgAuth = new AuthDjango();     // Initiate Auth Plugin
 }
