@@ -6,7 +6,7 @@
      *
      * Copyright 2009-2010 Thomas Lilley <mail@tomlilley.co.uk> (tomlilley.co.uk)
      * Copyright 2011 Jack Grigg <me@jackgrigg.com> (jackgrigg.com)
-     * Copyright 2015 Matthew Petroff (https://mpetroff.net/)
+     * Copyright 2015-2016 Matthew Petroff (https://mpetroff.net/)
      *
      * This program is free software; you can redistribute it and/or modify
      * it under the terms of the GNU General Public License as published by
@@ -61,12 +61,14 @@
             $this->session_table            = $GLOBALS['wgAuthDjangoConfig']['SessionTable'];
             
             // start database connection
-            $this->dbd = new DatabaseMysql(
-                $GLOBALS['wgAuthDjangoConfig']['DjangoHost'],
-                $GLOBALS['wgAuthDjangoConfig']['DjangoUser'],
-                $GLOBALS['wgAuthDjangoConfig']['DjangoPass'],
-                $GLOBALS['wgAuthDjangoConfig']['DjangoDBName']
-            );
+            $this->dbd = DatabaseBase::factory('mysql', array(
+                'host'        => $GLOBALS['wgAuthDjangoConfig']['DjangoHost'],
+                'user'        => $GLOBALS['wgAuthDjangoConfig']['DjangoUser'],
+                'password'    => $GLOBALS['wgAuthDjangoConfig']['DjangoPass'],
+                'dbname'      => $GLOBALS['wgAuthDjangoConfig']['DjangoDBName'],
+                'flags'       => 0,
+                'tablePrefix' => ''
+            ));
             
             // Set hooks functions
             $GLOBALS['wgHooks']['UserLogout'][]            = $this;
@@ -165,7 +167,7 @@
         public function onUserLoadFromSession($user, &$result) {
             global $wgLanguageCode, $wgRequest, $wgOut;
             $lg = Language::factory($wgLanguageCode);
-            if (isset($_REQUEST['title']) && strstr($_REQUEST['title'], $lg->specialPage('Userlogin'))) {
+            if (isset($_REQUEST['title']) && strstr($_REQUEST['title'], SpecialPageFactory::getLocalNameFor('Userlogin'))) {
                 // Redirect to our login page
                 $returnto = $wgRequest->getVal('returnto');
                 // Don't redirect straight back to the logout page

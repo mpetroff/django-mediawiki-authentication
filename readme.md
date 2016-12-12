@@ -6,6 +6,8 @@ authentication app as a backend.
 It requires Django 1.5.3 or later with JSON session serializer, which has been
 the default since 1.6.
 
+Currently tested again MediaWiki 1.27.1.
+
 ## Installation
 
 * Copy `django-media-authentication/` to `extensions/` and rename to `AuthDjango/`.
