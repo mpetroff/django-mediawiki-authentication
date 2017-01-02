@@ -171,7 +171,7 @@
                 // Redirect to our login page
                 $returnto = $wgRequest->getVal('returnto');
                 // Don't redirect straight back to the logout page
-                $returnto = (strstr($returnto, $lg->specialPage('Userlogout'))) ? '' : $returnto;
+                $returnto = (strstr($returnto, SpecialPageFactory::getLocalNameFor('Userlogout'))) ? '' : $returnto;
                 $wgOut->redirect($GLOBALS['wgAuthDjangoConfig']['LinkToSiteLogin'] . '?next=' . $GLOBALS['wgAuthDjangoConfig']['LinkToWiki'] . $returnto);
             } elseif (array_key_exists('sessionid', $_COOKIE)) {
                 $django_session = $_COOKIE['sessionid'];
